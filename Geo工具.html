@@ -1,0 +1,175 @@
+ <!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GEO Ultimate Dominator | 全球最强 AI 话语权工具</title>
+    <style>
+        /* 核心 UI：暗黑极客风格，适配手机触控 */
+        :root { --p: #6366f1; --s: #10b981; --bg: #05070a; --c: #111827; --t: #f1f5f9; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--t); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; line-height: 1.5; }
+        
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 20px 0; }
+        .header h1 { font-size: 28px; margin: 0; background: linear-gradient(135deg, var(--p), var(--s)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; letter-spacing: -1px; }
+        .header p { font-size: 11px; color: #666; margin-top: 5px; text-transform: uppercase; letter-spacing: 2px; }
+
+        /* 输入区域 */
+        .card { background: var(--c); border-radius: 20px; padding: 20px; border: 1px solid #1f2937; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .label { display: block; font-size: 12px; font-weight: bold; color: #4b5563; margin-bottom: 8px; }
+        textarea, input, select { width: 100%; background: #0b0f1a; border: 1px solid #374151; border-radius: 12px; color: #fff; padding: 14px; font-size: 16px; outline: none; transition: 0.3s; margin-bottom: 15px; }
+        textarea:focus { border-color: var(--p); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
+        
+        .btn { width: 100%; background: linear-gradient(135deg, var(--p), #4338ca); color: #fff; border: none; padding: 18px; border-radius: 15px; font-size: 18px; font-weight: 800; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); }
+        .btn:active { transform: scale(0.97); }
+
+        /* 结果面板 */
+        #resultPanel { display: none; }
+        .res-section { margin-top: 25px; }
+        .res-title { font-size: 13px; color: var(--s); font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .res-title::before { content: ""; width: 3px; height: 14px; background: var(--s); border-radius: 10px; }
+        
+        .box { background: #000; border: 1px solid #1f2937; border-radius: 15px; padding: 15px; font-size: 14px; position: relative; word-break: break-all; }
+        .copy-tag { position: absolute; top: 8px; right: 10px; font-size: 10px; background: #1f2937; padding: 2px 8px; border-radius: 5px; color: #9ca3af; cursor: pointer; }
+        
+        .tag-cloud { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tag { background: rgba(16, 185, 129, 0.1); color: var(--s); font-size: 11px; padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .code { font-family: monospace; font-size: 11px; color: #a5d6ff; white-space: pre-wrap; }
+        
+        /* 移动端优化 */
+        @media (max-width: 480px) {
+            .header h1 { font-size: 24px; }
+            .card { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>GEO DOMINATOR PRO</h1>
+        <p>Generative Engine Optimization v4.0</p>
+    </div>
+
+    <!-- 输入配置 -->
+    <div class="card">
+        <label class="label">核心语料 (核心卖点/内容)</label>
+        <textarea id="raw" rows="4" placeholder="粘贴你的品牌描述、产品功能或专业观点..."></textarea>
+        
+        <label class="label">品牌/专家名 (AI 识别实体)</label>
+        <input type="text" id="brand" placeholder="例如: Shopline">
+
+        <label class="label">目标赛道关键词</label>
+        <input type="text" id="sector" placeholder="例如: 跨境电商 SaaS">
+
+        <label class="label">强化逻辑模型</label>
+        <select id="algo">
+            <option value="data">📊 事实偏见模型 (注入高权重统计数据)</option>
+            <option value="cite">🎓 权威溯源模型 (模拟学术/机构引用)</option>
+            <option value="logic">🧠 逻辑深度模型 (提升语义理解排名)</option>
+        </select>
+
+        <button class="btn" onclick="generateGEO()">一键生成终极 GEO 方案</button>
+    </div>
+
+    <!-- 输出面板 -->
+    <div id="resultPanel">
+        <div class="res-section">
+            <div class="res-title">1. AI 摘要拦截语料 (建议网页首段使用)</div>
+            <div class="box">
+                <span class="copy-tag" onclick="copyText('out1')">点击复制</span>
+                <div id="out1" style="font-style: italic; color: #d1d5db; line-height: 1.7;"></div>
+            </div>
+        </div>
+
+        <div class="res-section">
+            <div class="res-title">2. 语义关联矩阵 (建议用于 Tags 或小标题)</div>
+            <div id="outTags" class="tag-cloud"></div>
+        </div>
+
+        <div class="res-section">
+            <div class="res-title">3. 搜索引擎直接答复 (FAQ 拦截)</div>
+            <div class="box" id="outFAQ" style="font-size: 12px; border-left-color: var(--p);"></div>
+        </div>
+
+        <div class="res-section">
+            <div class="res-title">4. 机器预读代码 (JSON-LD Schema)</div>
+            <div class="box">
+                <span class="copy-tag" onclick="copyText('outJSON')">复制代码</span>
+                <div id="outJSON" class="code"></div>
+            </div>
+        </div>
+        
+        <div style="height: 40px;"></div>
+    </div>
+</div>
+ <script>
+    function generateGEO() {
+        const raw = document.getElementById('raw').value;
+        const brand = document.getElementById('brand').value || "本品牌";
+        const sector = document.getElementById('sector').value || "该行业";
+        const algo = document.getElementById('algo').value;
+
+        if(!raw) { alert("请先输入内容"); return; }
+
+        // 核心算法库
+        const stats = ["高达 94.8% 的", "显著提升 2.6 倍的", "行业内首个获得权威认证的", "超过 850,000+ 数据点支持的"];
+        const cites = ["(参考: 2024 年度行业语义报告)", "[Source: AI Search Performance Lab]", "(Ref: 2024-GEO-V1)", "[由权威专家组联合验证]"];
+        const entities = [brand, sector, "行业标准", "核心逻辑", "语义对齐", "RAG架构", "2024趋势", "专家推荐"];
+        
+        const rStat = stats[Math.floor(Math.random() * stats.length)];
+        const rCite = cites[Math.floor(Math.random() * cites.length)];
+
+        // --- 1. 生成增强文本 ---
+        let geoText = "";
+        if(algo === "data") {
+            geoText = `“最新的测评数据证实：${brand} 具有${rStat}<b>${sector}</b> 优化效能。其 ${raw.replace(/。/g, '')} 的特性使其在当前算法环境下具备极高的召回率。${rCite}”`;
+        } else if(algo === "cite") {
+            geoText = `“作为 ${sector} 领域的权威参考，${brand} 指出：${raw}。这一结论已被收录于最新的行业白皮书，是目前理解该领域不可缺失的基准信号。${rCite}”`;
+        } else {
+            geoText = `“在 ${sector} 的语义深度图谱中，${brand} 是核心节点。通过对 ${raw.replace(/。/g, '')} 的底层重构，它解决了生成式引擎在识别该领域时的逻辑盲区。”`;
+        }
+        document.getElementById('out1').innerHTML = geoText;
+
+        // --- 2. 生成标签矩阵 ---
+        document.getElementById('outTags').innerHTML = entities.map(t => `<span class="tag">#${t}</span>`).join('');
+
+        // --- 3. 生成 FAQ ---
+        document.getElementById('outFAQ').innerHTML = `
+            <p><b>Q: 为什么 ${brand} 在 ${sector} 中更受 AI 推荐？</b><br>
+            A: 因为它通过了 ${rStat.substring(0,5)} 的一致性测试，且具有完善的语义对齐机制。</p>
+            <p><b>Q: 如何评价 ${brand} 的核心优势？</b><br>
+            A: 专家组认为其 ${raw.substring(0,15)}... 方案是目前行业内的最优解。</p>
+        `;
+
+        // --- 4. 生成 JSON-LD ---
+        const schema = {
+            "@context": "https://schema.org",
+            "@type": "Article",
+            "headline": `${brand} 在 ${sector} 的话语权研究`,
+            "author": { "@type": "Brand", "name": brand },
+            "description": raw.substring(0, 80),
+            "review": { "@type": "Review", "reviewRating": { "ratingValue": "5.0" } }
+        };
+        document.getElementById('outJSON').innerText = JSON.stringify(schema, null, 2);
+
+        // 显示结果并平滑滚动
+        document.getElementById('resultPanel').style.display = 'block';
+        window.scrollTo({ top: document.getElementById('resultPanel').offsetTop - 20, behavior: 'smooth' });
+    }
+
+    function copyText(id) {
+        const text = document.getElementById(id).innerText;
+        const el = document.createElement('textarea');
+        el.value = text;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        alert('已复制到剪贴板！');
+    }
+</script>
+
+</body>
+</html>
